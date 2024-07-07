@@ -1,0 +1,16 @@
+See Methodology.h::'class Methodology' declarations
+File with a single test questions:
+
+    1.  MUST be named as "Questions" and placed into a directory of corresponding methodics.
+
+    2.  MUST have the following content format: 
+        <Q><sep><N><sep><A1><sep><A2><sep>...<An>
+            sep      = separator. Carrently '@' is used
+            Q        = question
+            A .. An  = answers
+            N        = number of answers that must be chosen to consider the question as answered
+        Note that questions must be placed in order they are to be displayed to a client.
+
+    3.  MIGHT have unlimited questions number.
+ 
+    4.  MIGHT contain different possible answers count for different questions.
