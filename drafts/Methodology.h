@@ -13,6 +13,7 @@ namespace quest
 {
 
 
+/// @brief Represents single methodology along with its questions
 class Methodology
 {
 private:
@@ -23,6 +24,12 @@ private:
 public:
     Methodology();
     const std::vector<quest::Question>& get_questions();
+//     virtual void get_results() = 0;
+
+// #ifdef DEBUG
+// private:
+//     virtual void check_questions() = 0;
+// #endif
 };
 
 
