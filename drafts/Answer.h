@@ -1,7 +1,6 @@
 #pragma once
 
 
-#include <cstdint>
 #include <vector>
 
 
@@ -12,12 +11,13 @@ namespace quest
 class Answer
 {
 private:
-    std::vector<std::int8_t> answers;
+    std::vector<int> answers;
 
 public:
     Answer() = delete;
-    Answer(std::int8_t number);
-    void set_answers(std::vector<std::int8_t>&& ans);
+    Answer(int number);
+    void set_answers(std::vector<int>&& ans);
+    const std::vector<int>& get_answers() const;
 };
 
 

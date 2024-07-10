@@ -6,12 +6,12 @@ namespace quest
 {
 
 
-Answer::Answer(std::int8_t number) : answers(number)
+Answer::Answer(int number) : answers(number)
 {
 }
 
 
-void Answer::set_answers(std::vector<std::int8_t>&& ans)
+void Answer::set_answers(std::vector<int>&& ans)
 {
     if (answers.size() != ans.size())
     {
@@ -19,6 +19,12 @@ void Answer::set_answers(std::vector<std::int8_t>&& ans)
     }
 
     answers = std::move(ans);
+}
+
+
+const std::vector<int>& Answer::get_answers() const
+{
+    return answers;
 }
 
 

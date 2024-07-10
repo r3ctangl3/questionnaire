@@ -35,7 +35,7 @@ Question::Question(const std::string& rawData, char separator)
 
     try
     {
-        answersNumber = static_cast<std::int8_t>(std::stoi(rawTokens[1]));
+        answersNumber = static_cast<int>(std::stoi(rawTokens[1]));
     }
     catch (const std::exception& e)
     {
@@ -45,7 +45,7 @@ Question::Question(const std::string& rawData, char separator)
 #endif // DEBUG
 
     text = std::move(rawTokens[0]);
-    answersNumber = static_cast<std::int8_t>(std::stoi(rawTokens[1]));
+    answersNumber = static_cast<int>(std::stoi(rawTokens[1]));
     answers = std::span<const std::string> {rawTokens.begin() + 2, rawTokens.size() - 2};
 }
 
@@ -54,7 +54,7 @@ const std::string& Question::get_text() const
     return text;
 }
 
-const std::int8_t Question::get_answers_number() const
+const int Question::get_answers_number() const
 {
     return answersNumber;
 }

@@ -5,7 +5,7 @@ namespace quest
 {
 
 
-Zung::Zung() : Methodology(quest::MethodologyName::ZUNG)
+Zung::Zung() : Methodology("zung", quest::MethodicsNameHash::ZUNG)
 {
 }
 
