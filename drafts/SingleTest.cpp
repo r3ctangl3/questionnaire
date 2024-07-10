@@ -5,7 +5,7 @@ namespace quest
 {
 
 
-SingleTest::SingleTest(quest::Methodology* methodology) : questions(methodology->get_questions())
+SingleTest::SingleTest(const quest::Methodology* methodology) : questions(methodology->get_questions())
 {
     for (const auto& q : questions)
     {

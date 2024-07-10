@@ -5,7 +5,7 @@ namespace quest
 {
 
 
-Beka::Beka() : Methodology("beka", quest::MethodicsNameHash::BEKA)
+Beka::Beka() : Methodology("beka")
 {
 }
 

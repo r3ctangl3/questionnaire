@@ -4,16 +4,18 @@
 
 #include "Exception.h"
 #include "Question.h"
-#include "Methodics.h"
 #include "SingleTest.h"
+#include "MethodicsLoader.h"
 
 
 int main()
 { 
+    quest::MethodicsLoader ml;
+    std::vector<const quest::Methodology *> methodics = ml.get_methodics( {"beka", "zung"} );
+    
     try
     {
-        quest::Beka b;
-        quest::SingleTest st(&b);
+        quest::SingleTest st(methodics[0]);
 
         // Answering test
         auto ie = st.end();
@@ -30,7 +32,7 @@ int main()
             for(currNum = 0; currNum < ib.get_current_question().get_answers_number(); ++currNum)
             {
                 std::cin >> currAnsw;
-                answers.push_back(static_cast<int>(std::stoi(currAnsw)));
+                answers.push_back(std::stoi(currAnsw));
             }
 
             ib.set_current_answer(std::move(answers));
@@ -46,6 +48,7 @@ int main()
             for (const auto& a : ib.get_current_answer()) {
                 std::cout << " - " << a;
             }
+            std::cout << std::endl;
         }
     }
     catch (const quest::QuestException& e)

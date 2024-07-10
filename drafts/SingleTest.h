@@ -13,6 +13,7 @@ namespace quest
 {
 
 
+/// @brief Owns test answers for a single methodology
 class SingleTest
 {
 private:
@@ -21,7 +22,7 @@ private:
 
 public:
     SingleTest() = delete;
-    SingleTest(quest::Methodology* methodology);
+    SingleTest(const quest::Methodology* methodology);
 
 private:
     using Qiter = std::vector<quest::Question>::const_iterator;

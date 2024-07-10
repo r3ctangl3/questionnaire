@@ -16,18 +16,6 @@ namespace quest
 {
 
 
-/// @brief Constants to be used in Methodology abstract class implementations
-struct MethodicsNameHash
-{
-    static const std::string BEKA   ;
-    static const std::string HANIN  ;
-    static const std::string MMPI   ;
-    static const std::string SCL    ;
-    static const std::string TOBOL  ;
-    static const std::string ZUNG   ;
-};
-
-
 /// @brief Represents single methodology along with its questions
 class Methodology
 {
@@ -39,8 +27,8 @@ private:
 
 public:
     Methodology() = delete;
-    Methodology(const char* name, const std::filesystem::path file);
-    const std::vector<quest::Question>& get_questions();
+    Methodology(const char* name);
+    const std::vector<quest::Question>& get_questions() const;
     virtual void get_results() = 0;
     virtual ~Methodology();
 
