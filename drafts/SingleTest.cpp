@@ -5,7 +5,9 @@ namespace quest
 {
 
 
-SingleTest::SingleTest(const quest::Methodology* methodology) : questions(methodology->get_questions())
+SingleTest::SingleTest(const quest::Methodology* methodology) 
+    : questions(methodology->get_questions())
+    , name(methodology->get_name())
 {
     for (const auto& q : questions)
     {
@@ -14,16 +16,22 @@ SingleTest::SingleTest(const quest::Methodology* methodology) : questions(method
 }
 
 
-SingleTest::Iterator::Iterator(Qiter&& q, Aiter&& a)
+const std::string& SingleTest::get_name()
 {
-    qiter = q;
-    aiter = a;
+    return name;
 }
 
 
 SingleTest::Iterator SingleTest::begin()
 {
     return SingleTest::Iterator(std::move(questions.begin()), std::move(answers.begin()));
+}
+
+
+SingleTest::Iterator::Iterator(Qiter&& q, Aiter&& a)
+{
+    qiter = q;
+    aiter = a;
 }
 
 

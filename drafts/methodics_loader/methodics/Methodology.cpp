@@ -52,6 +52,12 @@ namespace quest
     }
 
 
+    const std::string& Methodology::get_name() const
+    {
+        return name;
+    }
+
+
     const std::vector<quest::Question>& Methodology::get_questions() const
     {
         return questions;

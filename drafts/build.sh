@@ -1,10 +1,11 @@
 #!/bin/bash
 
 
-SRCS="Question.cpp
-      Answer.cpp 
+SRCS="Answer.cpp
       Exception.cpp
+      Question.cpp 
       SingleTest.cpp
+      TestsSession.cpp
       methodics_loader/methodics/Methodology.cpp
       methodics_loader/methodics/beka/Beka.cpp
       methodics_loader/methodics/hanin/Hanin.cpp

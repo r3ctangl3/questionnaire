@@ -29,9 +29,11 @@ public:
     Methodology() = delete;
     Methodology(const char* name);
     const std::vector<quest::Question>& get_questions() const;
+    const std::string& get_name() const;
     virtual void get_results() = 0;
     virtual ~Methodology();
 
+// TODO:
 // #ifdef DEBUG
 // private:
 //     virtual void check_questions() = 0;

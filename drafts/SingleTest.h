@@ -17,12 +17,15 @@ namespace quest
 class SingleTest
 {
 private:
+    bool isDone = false;                                     // TODO: decide how to set to true
     const std::vector<quest::Question>& questions;
     std::vector<quest::Answer> answers;
+    const std::string& name;
 
 public:
     SingleTest() = delete;
     SingleTest(const quest::Methodology* methodology);
+    const std::string& get_name();
 
 private:
     using Qiter = std::vector<quest::Question>::const_iterator;
