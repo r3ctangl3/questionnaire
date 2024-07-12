@@ -9,6 +9,32 @@
 #include "TestsSession.h"
 
 
+/*
+
+int main()
+{
+    quest::MethodicsLoader ml;
+    quest::Fsm fsm(&ml);
+
+    int result;
+    quest::FsmSignal signal;
+    
+    while (Fsm.is_running())
+    {
+        signal = get_fsm_signal();
+        result = fsm.toggle(signal);
+        if (!result) 
+        {
+            std::cout << "Error while toggle(): " << fsm.get_error() << std::endl; 
+            std::cout << "Current state: " << fsm.get_curr_state() << std::endl; 
+            continue;
+        } 
+    }
+}
+
+*/
+
+
 int main()
 { 
     quest::MethodicsLoader ml;
