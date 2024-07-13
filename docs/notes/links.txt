@@ -1,0 +1,5 @@
+Diagram editor
+https://app.diagrams.net/
+
+Github CI/CD
+https://docs.github.com/en/actions
