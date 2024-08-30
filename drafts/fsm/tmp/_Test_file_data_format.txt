@@ -1,0 +1,18 @@
+File with a single methodology questions:
+
+    1.  MUST be named according to a hash value produced 
+        by /utils/get_methodics_hash.py script (without an extension)
+
+    2.  MUST be placed into a /tmp/ directory of release
+
+    3.  MUST have the following content format: 
+        <Q><sep><N><sep><A1><sep><A2><sep>...<An>
+            sep      = separator. Carrently '@' is used
+            Q        = question
+            A .. An  = answers
+            N        = number of answers that must be chosen to consider the question as answered
+        Note that questions must be placed in order they are to be displayed to a client.
+
+    4.  MIGHT have unlimited questions number.
+ 
+    5.  MIGHT contain different possible answers count for different questions.
