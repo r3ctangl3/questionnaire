@@ -1,0 +1,5 @@
+get all clients ordered by id (id is primary key)
+pass one field by one to Crypto object
+Crypto object keeps two QString keystream iterators: encrypt and decrypt
+
+https://libsodium.gitbook.io/doc/advanced/scrypt
