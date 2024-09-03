@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QSqlQuery>
 #include <QSqlDatabase>
 #include <QString>
 
@@ -22,7 +23,7 @@ private:
 
     static const QFileInfo finfo_;
 
-    std::unique_ptr<QSqlDatabase> db_ = nullptr;
+    QSqlDatabase db_;
 
 public:
 
@@ -37,6 +38,8 @@ private:
     void create_database();
 
     bool create_db_path();
+
+    void set_database_structure();
 
 };
 

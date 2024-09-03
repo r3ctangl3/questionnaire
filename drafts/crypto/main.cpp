@@ -12,17 +12,45 @@
 #include <QTextStream>
 
 
+static void database_test(QTextStream& out);
+static void crypto_test(QTextStream& out);
+
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
     QTextStream out(stdout);
 
+    Widget window;
+    QSize size(400, 140);
+    QIcon icon("icon.png");
+    QString title("GuiApp");
+    QString tip("ToolTip");
+    window.resize(size);
+    window.setWindowIcon(icon);
+    window.setWindowTitle(title);
+    window.setToolTip(tip);
+    window.show();
+
+    database_test(out);
+
+    return a.exec();
+}
+
+
+void database_test(QTextStream& out)
+{
+    quest::Database db;
+}
+
+
+void crypto_test(QTextStream& out)
+{
     quest::Crypto crypto;
     if (!crypto.ok())
     {
         ERROR("Filed to create crypto instance");
-        return 1;
+        return;
     }
 
     QString salt = crypto.generate_random_salt();
@@ -31,18 +59,6 @@ int main(int argc, char *argv[])
     QString passwd("password");
     crypto.evaluate_key(passwd);
     crypto.generate_keystreams(1, 1);
-
-    Widget window;
-    QSize size(400, 140);
-    QIcon icon("icon.png");
-    QString title("GuiApp");
-    QString tip("ToolTip");
-
-    window.resize(size);
-    window.setWindowIcon(icon);
-    window.setWindowTitle(title);
-    window.setToolTip(tip);
-    window.show();
 
     /*
         password                // from UI
@@ -81,9 +97,6 @@ int main(int argc, char *argv[])
             decrypt -> every run, repeatable
             encrypt -> every run, repeatable
         +   generate_keystreams(password, salt, decrypt_nonce) -> every run, oneshot (return encrypt_nonce)
-     */
-
-    // quest::Database db;
-
-    return a.exec();
+    */
 }
+

@@ -9,8 +9,10 @@ namespace quest
 const QFileInfo Database::finfo_("databases/main.sqlite");
 
 
-Database::Database()
+Database::Database() : db_(QSqlDatabase::addDatabase("QSQLITE"))
 {
+    db_.setDatabaseName(finfo_.absoluteFilePath());
+
     if (!Database::finfo_.exists())
     {
         Database::create_database();
@@ -26,7 +28,7 @@ Database::~Database()
 {
     // remove old backup if exists
 
-    // rename database to _finfo.absoluteFilePath() + ".backup"
+    // rename database to finfo_.absoluteFilePath() + ".backup"
 
     // encrypt :memory: database
 
@@ -40,6 +42,8 @@ Database::~Database()
 
 void Database::init_database()
 {
+    bool rc = false;
+
     do
     {
         // open database
@@ -75,7 +79,14 @@ void Database::create_database()
             break;
         }
 
-        // create database first time and set its structure
+        rc = db_.open();
+        if (!rc)
+        {
+            ERROR("open()");
+            break;
+        }
+
+        set_database_structure();
 
         INFO("Database created");
 
@@ -100,5 +111,36 @@ bool Database::create_db_path()
     return true;
 }
 
+
+void Database::set_database_structure()
+{
+    bool        rc;
+    QString     str;
+    QSqlQuery   query;
+
+    str = "CREATE TABLE test (      "
+          "    id int privary key,  "
+          "    string varchar(20)   "
+          ")                        ";
+
+    rc = query.exec(str);
+    if (!rc)
+    {
+        ERROR("create table");
+        return;
+    }
+
+    str = "INSERT INTO test         "
+          "VALUES                   "
+          " (0, 'Ivan'),            "
+          " (1, 'Petr')             ";
+
+    rc = query.exec(str);
+    if (!rc)
+    {
+        ERROR("insert into");
+        return;
+    }
+}
 
 }
