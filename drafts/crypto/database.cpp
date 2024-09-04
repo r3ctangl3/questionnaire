@@ -6,19 +6,55 @@ namespace quest
 {
 
 
-const QFileInfo Database::finfo_("databases/main.sqlite");
+const QFileInfo Database::db_name_on_disk_("databases/main.sqlite");
+const QString Database::db_name_in_memory_("file::memory:");
+const QString Database::conn_name_on_disk_("on-disk-db");
+const QString Database::conn_name_in_memory_("in-memory-db");
+const QString Database::db_connect_options_("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
 
 
-Database::Database() : db_(QSqlDatabase::addDatabase("QSQLITE"))
+Database::Database() : db_(QSqlDatabase::addDatabase("QSQLITE", conn_name_in_memory_))
 {
-    db_.setDatabaseName(finfo_.absoluteFilePath());
+    bool rc = false;
 
-    if (!Database::finfo_.exists())
+    db_.setConnectOptions (db_connect_options_);
+    db_.setDatabaseName(db_name_in_memory_);
+
+    do
     {
-        Database::create_database();
-    }
+        rc = db_.open();
+        if (!rc)
+        {
+            ERROR(db_.lastError().text().toStdString());
+            break;
+        }
 
-    Database::init_database();
+        if (!Database::db_name_on_disk_.exists())
+        {
+            rc = Database::create_database();
+            if (!rc)
+            {
+                ERROR("create_database()");
+                break;
+            }
+        }
+
+        rc = Database::init_database();
+        if (!rc)
+        {
+            ERROR("init_database()");
+            break;
+        }
+
+        rc = true;
+
+    } while (0);
+
+    if (!rc)
+    {
+        // TODO: [impl] raise exception in case of error
+        ERROR("Database()");
+    }
 
     return;
 }
@@ -26,6 +62,25 @@ Database::Database() : db_(QSqlDatabase::addDatabase("QSQLITE"))
 
 Database::~Database()
 {
+    // TODO: [debug] remove ---------------------------------
+
+    QSqlQuery query(db_);
+
+    if (!query.exec("INSERT INTO test VALUES (2, 'Andrej')"))
+    {
+        ERROR(query.lastError().text().toStdString());
+        return;
+    };
+
+    if (!query.exec("VACUUM INTO 'databases/new.sqlite'"))
+    {
+        ERROR(query.lastError().text().toStdString());
+        return;
+    }
+
+
+    // ------------------------------------------------------
+
     // remove old backup if exists
 
     // rename database to finfo_.absoluteFilePath() + ".backup"
@@ -40,65 +95,107 @@ Database::~Database()
 }
 
 
-void Database::init_database()
+bool Database::init_database()
 {
     bool rc = false;
 
-    do
+    // for disk database resources to be correctly destroyed:
+    // https://doc.qt.io/qt-6/qsqldatabase.html#removeDatabase
     {
-        // open database
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", conn_name_on_disk_);
+        db.setConnectOptions(db_connect_options_);
+        db.setDatabaseName(db_name_on_disk_.absoluteFilePath());
 
-        // ask for admin password
+        do
+        {
+            rc = db.open();
+            if (!rc)
+            {
+                ERROR("open()");
+                break;
+            }
 
-        // check if password suits
+            QSqlQuery query(db);
 
-        // make database :memory: copy
+            rc = query.exec(QString("VACUUM INTO '%1'").arg(db_name_in_memory_));
+            if (!rc)
+            {
+                ERROR(query.lastError().text().toStdString());
+                break;
+            }
 
-        // close database
+            INFO(db_.tables().size());
 
-        // decrypt :memory: database
+            INFO("Database inited and loaded to memory");
 
-        INFO("Database inited and loaded to memory");
+            rc = true;
 
-    } while(0);
+        } while(0);
 
-    return;
+        if (db.isOpen())
+        {
+            db.close();
+        }
+    }
+
+    QSqlDatabase::removeDatabase(conn_name_on_disk_);
+
+    return rc;
 }
 
 
-void Database::create_database()
+bool Database::create_database()
 {
     bool rc = false;
 
-    do
+    // for disk database resources to be correctly destroyed:
+    // https://doc.qt.io/qt-6/qsqldatabase.html#removeDatabase
     {
-        rc = Database::create_db_path();
-        if (!rc)
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", conn_name_on_disk_);
+        db.setDatabaseName(db_name_on_disk_.absoluteFilePath());
+
+        do
         {
-            ERROR("create_db_path()");
-            break;
-        }
+            rc = Database::create_db_path();
+            if (!rc)
+            {
+                ERROR("create_db_path()");
+                break;
+            }
 
-        rc = db_.open();
-        if (!rc)
+            rc = db.open();
+            if (!rc)
+            {
+                ERROR("open()");
+                break;
+            }
+
+            rc = set_database_structure(db);
+            if (!rc)
+            {
+                ERROR("set_database_structure()");
+                break;
+            }
+
+            INFO("Database created");
+
+        } while (0);
+
+        if (db.isOpen())
         {
-            ERROR("open()");
-            break;
+            db.close();
         }
+    }
 
-        set_database_structure();
+    QSqlDatabase::removeDatabase(conn_name_on_disk_);
 
-        INFO("Database created");
-
-    } while (0);
-
-    return;
+    return rc;
 }
 
 
 bool Database::create_db_path()
 {
-    QDir dir = Database::finfo_.absoluteDir();
+    QDir dir = Database::db_name_on_disk_.absoluteDir();
 
     if (!dir.exists())
     {
@@ -112,35 +209,41 @@ bool Database::create_db_path()
 }
 
 
-void Database::set_database_structure()
+bool Database::set_database_structure(const QSqlDatabase& db)
 {
     bool        rc;
     QString     str;
-    QSqlQuery   query;
+    QSqlQuery   query(db);
 
-    str = "CREATE TABLE test (      "
-          "    id int privary key,  "
-          "    string varchar(20)   "
-          ")                        ";
-
-    rc = query.exec(str);
-    if (!rc)
+    do
     {
-        ERROR("create table");
-        return;
-    }
+        str = "CREATE TABLE test (      "
+              "    id int privary key,  "
+              "    string varchar(20)   "
+              ")                        ";
 
-    str = "INSERT INTO test         "
-          "VALUES                   "
-          " (0, 'Ivan'),            "
-          " (1, 'Petr')             ";
+        rc = query.exec(str);
+        if (!rc)
+        {
+            ERROR("create table");
+            break;
+        }
 
-    rc = query.exec(str);
-    if (!rc)
-    {
-        ERROR("insert into");
-        return;
-    }
+        str = "INSERT INTO test         "
+              "VALUES                   "
+              " (0, 'Ivan'),            "
+              " (1, 'Petr')             ";
+
+        rc = query.exec(str);
+        if (!rc)
+        {
+            ERROR("insert into");
+            break;
+        }
+
+    } while (0);
+
+    return rc;
 }
 
 }

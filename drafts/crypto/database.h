@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlDatabase>
 #include <QString>
@@ -21,9 +22,13 @@ class Database
 {
 private:
 
-    static const QFileInfo finfo_;
+    static const QFileInfo db_name_on_disk_;
+    static const QString db_name_in_memory_;
+    static const QString conn_name_on_disk_;
+    static const QString conn_name_in_memory_;
+    static const QString db_connect_options_;    // required for VACUUM to work properly
 
-    QSqlDatabase db_;
+    QSqlDatabase db_;   // in-memory database handler
 
 public:
 
@@ -33,13 +38,13 @@ public:
 
 private:
 
-    void init_database();
+    bool init_database();
 
-    void create_database();
+    bool create_database();
 
     bool create_db_path();
 
-    void set_database_structure();
+    bool set_database_structure(const QSqlDatabase& db);
 
 };
 

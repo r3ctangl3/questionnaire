@@ -76,9 +76,9 @@ Widget::Widget(QWidget *parent)
     ledit_ = new QLineEdit(this);
     QFormLayout* layout = new QFormLayout(this);
     layout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    layout->addRow("Enter:", ledit_);
+    layout->addRow("Enter password:", ledit_);
 
-    QPushButton* save_button = new QPushButton("Save", this);
+    QPushButton* save_button = new QPushButton("Login", this);
     save_button->setGeometry(300, 85, 75, 40);
     QWidget::connect(save_button, &QPushButton::clicked, this, &Widget::save);
 
