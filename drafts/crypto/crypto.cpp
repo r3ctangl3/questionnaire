@@ -170,4 +170,4 @@ void Crypto::generate_encrypt_nonce()
 }
 
 
-}
+} // namespace quest

@@ -107,7 +107,7 @@ private:
 };
 
 
-}
+} // namespace quest
 
 
 #endif // CRYPTO_H

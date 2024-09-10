@@ -23,13 +23,13 @@ set(PROJECT_SOURCES
     crypto.h
     database.cpp
     database.h
+    database_structure.cpp
     utils.h
     widget.cpp
     widget.h
 )
 
 qt_add_executable(GuiApp MANUAL_FINALIZATION ${PROJECT_SOURCES})
-
 
 
 target_link_libraries(GuiApp PRIVATE chacha20)

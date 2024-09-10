@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QByteArray>
 #include <QIcon>
+#include <QList>
 #include <QSize>
 #include <QString>
 #include <QTextStream>

@@ -6,7 +6,12 @@ namespace quest
 {
 
 
-const QFileInfo Database::db_name_on_disk_("databases/main.sqlite");
+extern QList<QString> db_create_structure_queries;
+
+
+const QString Database::db_name_on_disk_("databases/main.sqlite");
+const QString Database::db_name_on_disk_backup_("databases/main.sqlite.backup");
+const QString Database::db_name_on_disk_new_("databases/main.sqlite.new");
 const QString Database::db_name_in_memory_("file::memory:");
 const QString Database::conn_name_on_disk_("on-disk-db");
 const QString Database::conn_name_in_memory_("in-memory-db");
@@ -29,9 +34,9 @@ Database::Database() : db_(QSqlDatabase::addDatabase("QSQLITE", conn_name_in_mem
             break;
         }
 
-        if (!Database::db_name_on_disk_.exists())
+        if (!QFileInfo::exists(db_name_on_disk_))
         {
-            rc = Database::create_database();
+            rc = create_database();
             if (!rc)
             {
                 ERROR("create_database()");
@@ -39,7 +44,7 @@ Database::Database() : db_(QSqlDatabase::addDatabase("QSQLITE", conn_name_in_mem
             }
         }
 
-        rc = Database::init_database();
+        rc = init_database();
         if (!rc)
         {
             ERROR("init_database()");
@@ -62,36 +67,132 @@ Database::Database() : db_(QSqlDatabase::addDatabase("QSQLITE", conn_name_in_mem
 
 Database::~Database()
 {
-    // TODO: [debug] remove ---------------------------------
+    // we discard saving result because we can
+    // do nothing if something goes wrong inside
+    // the destructor. Therefore save_database()
+    // function should be called explicitely before
+    // the program is over to have the opportunity
+    // to handle error. Destructor should just be.
+
+    save_database();
+    return;
+}
+
+
+bool Database::save_database()
+{
+    bool rc = false;
 
     QSqlQuery query(db_);
+    QFile db_on_disk(db_name_on_disk_);
+    QFile db_on_disk_backup(db_name_on_disk_backup_);
+    QFile db_on_disk_new(db_name_on_disk_new_);
 
-    if (!query.exec("INSERT INTO test VALUES (2, 'Andrej')"))
+    do
+    {
+        // first of all we have to save in-memory database to on-disk
+
+        rc = encrypt_database();
+        if (!rc)
+        {
+            ERROR("encrypt_database()");
+            break;
+        }
+
+        rc = query.exec(QString("VACUUM INTO '%1'").arg(db_name_on_disk_new_));
+        if (!rc)
+        {
+            ERROR(query.lastError().text().toStdString());
+            break;
+        }
+
+        // now we rotate on-disk backup: current main database becomes backup
+
+        if (db_on_disk_backup.exists())
+        {
+            rc = db_on_disk_backup.remove();
+            if (!rc)
+            {
+                ERROR(query.lastError().text().toStdString());
+                break;
+            }
+        }
+
+        if (db_on_disk.exists())
+        {
+            rc = db_on_disk.rename(db_name_on_disk_backup_);
+            if (!rc)
+            {
+                ERROR(query.lastError().text().toStdString());
+                break;
+            }
+        }
+
+        // now we rename new on-disk database to be the main one
+
+        rc = db_on_disk_new.rename(db_name_on_disk_);
+        if (!rc)
+        {
+            ERROR(query.lastError().text().toStdString());
+            break;
+        }
+
+        INFO("Database encrypted and placed to disk");
+
+    } while (0);
+
+    return rc;
+}
+
+
+bool Database::set_nonce(uint32_t nonce)
+{
+    QSqlQuery query(db_);
+
+    bool rc = query.exec(QString("PRAGMA user_version = %1").arg(nonce));
+    if (!rc)
     {
         ERROR(query.lastError().text().toStdString());
-        return;
-    };
-
-    if (!query.exec("VACUUM INTO 'databases/new.sqlite'"))
-    {
-        ERROR(query.lastError().text().toStdString());
-        return;
     }
 
+    return rc;
+}
 
-    // ------------------------------------------------------
 
-    // remove old backup if exists
+uint32_t Database::get_nonce()
+{
+    bool rc = false;
+    uint32_t nonce = 0;
+    QSqlQuery query(db_);
 
-    // rename database to finfo_.absoluteFilePath() + ".backup"
+    do
+    {
+        rc = query.exec(QString("PRAGMA user_version"));
+        if (!rc)
+        {
+            ERROR(query.lastError().text().toStdString());
+            break;
+        }
 
-    // encrypt :memory: database
+        rc = query.isActive();
+        if (!rc)
+        {
+            ERROR(query.lastError().text().toStdString());
+            break;
+        }
 
-    // save :memory: database to file _finfo.absoluteFilePath()
+        rc = query.first();
+        if (!rc)
+        {
+            ERROR(query.lastError().text().toStdString());
+            break;
+        }
 
-    INFO("Database encrypted and placed to disk");
+        nonce = query.value(0).toUInt();
 
-    return;
+    } while (0);
+
+    return nonce;
 }
 
 
@@ -104,7 +205,7 @@ bool Database::init_database()
     {
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", conn_name_on_disk_);
         db.setConnectOptions(db_connect_options_);
-        db.setDatabaseName(db_name_on_disk_.absoluteFilePath());
+        db.setDatabaseName(QFileInfo(db_name_on_disk_).absoluteFilePath());
 
         do
         {
@@ -116,6 +217,9 @@ bool Database::init_database()
             }
 
             QSqlQuery query(db);
+
+            // TODO: [debug] remove
+            print_pragma("user_version", db);
 
             rc = query.exec(QString("VACUUM INTO '%1'").arg(db_name_in_memory_));
             if (!rc)
@@ -152,7 +256,7 @@ bool Database::create_database()
     // https://doc.qt.io/qt-6/qsqldatabase.html#removeDatabase
     {
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", conn_name_on_disk_);
-        db.setDatabaseName(db_name_on_disk_.absoluteFilePath());
+        db.setDatabaseName(QFileInfo(db_name_on_disk_).absoluteFilePath());
 
         do
         {
@@ -183,6 +287,11 @@ bool Database::create_database()
 
         if (db.isOpen())
         {
+            if (!rc)
+            {
+                QFile(db_name_on_disk_).remove();
+            }
+
             db.close();
         }
     }
@@ -195,7 +304,7 @@ bool Database::create_database()
 
 bool Database::create_db_path()
 {
-    QDir dir = Database::db_name_on_disk_.absoluteDir();
+    QDir dir = QFileInfo(db_name_on_disk_).absoluteDir();
 
     if (!dir.exists())
     {
@@ -211,39 +320,31 @@ bool Database::create_db_path()
 
 bool Database::set_database_structure(const QSqlDatabase& db)
 {
-    bool        rc;
-    QString     str;
-    QSqlQuery   query(db);
+    bool rc = true;
+    QSqlQuery query(db);
 
-    do
+    for (const auto& q : db_create_structure_queries)
     {
-        str = "CREATE TABLE test (      "
-              "    id int privary key,  "
-              "    string varchar(20)   "
-              ")                        ";
-
-        rc = query.exec(str);
+        rc = query.exec(q);
         if (!rc)
         {
-            ERROR("create table");
+            ERROR(query.lastError().text().toStdString());
             break;
         }
+    }
 
-        str = "INSERT INTO test         "
-              "VALUES                   "
-              " (0, 'Ivan'),            "
-              " (1, 'Petr')             ";
-
-        rc = query.exec(str);
-        if (!rc)
-        {
-            ERROR("insert into");
-            break;
-        }
-
-    } while (0);
+    query.exec("INSERT INTO Tests VALUES (0, '0', '00'), (1, '1', '11')");      // TODO: [debug] remove
 
     return rc;
 }
 
+
+bool Database::encrypt_database()
+{
+    // TODO: [impl] implement encryption
+
+    return true;
 }
+
+
+} // namespace quest
