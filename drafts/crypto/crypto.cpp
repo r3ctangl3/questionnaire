@@ -15,36 +15,28 @@ Crypto::KeyStream::KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce
 }
 
 
-bool Crypto::is_inited_ = false;
+Crypto* Crypto::instance_ = nullptr;
 
 
-Crypto::Crypto() noexcept
+Crypto* Crypto::instance()
 {
-    // libsodium library must be inited only once and
-    // does not require to be explicitely destroyed
+    static std::once_flag flag;
 
-    CryptoErr error = CryptoErr::Ok;
-
-    do
+    auto lambda = [&]()
     {
-        if (is_inited_)
+        try
         {
-            break;
+            instance_ = new Crypto();
         }
-
-        if (sodium_init() < 0)
+        catch (const std::bad_alloc&)
         {
-            error = CryptoErr::Init;
-            break;
+            // do nothing for now
         }
+    };
 
-        is_inited_ = true;  // crypto is first time inited
+    std::call_once(flag, lambda);
 
-    } while (0);
-
-    error_ = error;
-
-    return;
+    return instance_;
 }
 
 
@@ -114,16 +106,16 @@ void Crypto::generate_keystreams(uint32_t encrypt_blocks, uint32_t decrypt_block
 {
     generate_encrypt_nonce();
 
-    // try
-    // {
-    //     ks_decrypt = std::make_unique<KeyStream>(key_, decrypt_blocks, decrypt_nonce);
-         ks_encrypt = std::make_unique<KeyStream>(key_, encrypt_blocks, encrypt_nonce_);
-    // }
-    // catch (...)
-    // {
-    //     error_ = CryptoErr::Keystream;
-    //     return;
-    // }
+    try
+    {
+        ks_decrypt = std::make_unique<KeyStream>(key_, decrypt_blocks, decrypt_nonce);
+        ks_encrypt = std::make_unique<KeyStream>(key_, encrypt_blocks, encrypt_nonce_);
+    }
+    catch (...)
+    {
+        error_ = CryptoErr::Keystream;
+        return;
+    }
 
     error_ = CryptoErr::Ok;
     return;
@@ -157,6 +149,22 @@ void Crypto::decrypt(QString& cypher) noexcept
 {
     error_ = CryptoErr::Ok;
 
+    return;
+}
+
+
+Crypto::Crypto() noexcept
+{
+    // libsodium library must be inited only once and
+    // does not require to be explicitely destroyed
+
+    if (sodium_init() < 0)
+    {
+        error_ = CryptoErr::Init;
+        return;
+    }
+
+    error_ = CryptoErr::Ok;
     return;
 }
 

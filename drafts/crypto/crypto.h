@@ -3,6 +3,7 @@
 
 
 #include <QString>
+#include <mutex>
 
 
 #include "chacha20.h"
@@ -43,7 +44,6 @@ enum class CryptoErr
 };
 
 
-// TODO: [impl] reimplement as Singleton because crypto init must be called only once
 class Crypto
 {
 private:
@@ -61,9 +61,10 @@ private:
         // TODO: [impl] iterator
     };
 
+
 private:
 
-    static bool is_inited_;
+    static Crypto* instance_;
 
     uint8_t key_[CHACHA20_KEYLEN];
 
@@ -77,12 +78,20 @@ private:
 
     std::unique_ptr<KeyStream> ks_encrypt = nullptr;
 
+
 public:
 
-    /// @brief Constructor.
-    /// Class instance is always created. Use error()
-    /// to detect if any errors occur while creation.
-    Crypto() noexcept;
+    /// @brief Crypto class instance getter.
+    /// The class is implemented as Singletone to guarantee
+    /// only one cryptography initialization per app run.
+    static Crypto* instance();
+
+
+    /// @brief Forbid copy and move constructors and assign operators
+    Crypto(Crypto& other) = delete;
+    Crypto(Crypto&& other) = delete;
+    void operator=(Crypto& other) = delete;
+    void operator=(Crypto&& other) = delete;
 
 
     /// @brief Get info about if last operation succeed or failed.
@@ -151,7 +160,22 @@ public:
     /// while encryption should be passed to generate_keystream() method.
     void decrypt(QString& cypher) noexcept;
 
+
 private:
+
+    /// @brief Constructor.
+    /// Class instance is always created. Use error()
+    /// to detect if any errors occur while creation.
+    Crypto() noexcept;
+
+
+    /// @brief Destructor.
+    /// As class is implemented as Singleton, no destruction is allowed
+    /// until the program itself is over. Such an approach is suitable
+    /// because this class doesn't actually own any resources which should
+    /// be explicitely freed or any business logic to be necessarily done.
+    ~Crypto() = default;
+
 
     /// @brief Generate new nonce to be used while generating encrypt keystream.
     /// @return void. Always succeed.
