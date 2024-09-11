@@ -2,6 +2,9 @@
 #define CRYPTO_H
 
 
+#include <QString>
+
+
 #include "chacha20.h"
 #include "libsodium-win64/include/sodium.h"
 
@@ -25,10 +28,6 @@ static_assert(sizeof(wchar_t) == 2 * sizeof(uint8_t), "builtin types");
 static_assert(sizeof(word_t) == sizeof(uint32_t), "chacha20 word type");
 
 
-#include <QByteArray>
-#include <QString>
-
-
 namespace quest
 {
 
@@ -44,32 +43,31 @@ enum class CryptoErr
 };
 
 
-// TODO: [impl] move into Crypto class
-class KeyStream
+// TODO: [impl] reimplement as Singleton because crypto init must be called only once
+class Crypto
 {
 private:
 
-    QString ks_;
+    class KeyStream
+    {
+    private:
 
-public:
+        QString ks_;
 
-    KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce);
+    public:
 
-    // TODO: [impl] iterator
+        KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce);
 
-};
+        // TODO: [impl] iterator
+    };
 
-
-// TODO: [impl] reimplement as Singleton
-class Crypto
-{
 private:
 
     static bool is_inited_;
 
     uint8_t key_[CHACHA20_KEYLEN];
 
-    uint8_t salt_[SALT_WCHAR];
+    uint8_t salt_[SALT_BYTES];
 
     uint32_t encrypt_nonce_ = 0;
 
@@ -81,29 +79,87 @@ private:
 
 public:
 
-    Crypto();
+    /// @brief Constructor.
+    /// Class instance is always created. Use error()
+    /// to detect if any errors occur while creation.
+    Crypto() noexcept;
 
-    bool ok();
 
-    CryptoErr error();
+    /// @brief Get info about if last operation succeed or failed.
+    /// @return 'true' if last operation succeed, 'false' if failed.
+    bool ok() noexcept;
 
-    QString generate_random_salt();
 
-    void set_salt(const QString& salt);
+    /// @brief Get last operation status.
+    /// @return CryptoErr instance. Always succeed.
+    CryptoErr error() noexcept;
 
-    void evaluate_key(const QString& password);
 
-    void generate_keystreams(uint32_t blocks, uint32_t decrypt_nonce);
+    /// @brief Generate random SALT_BYTES and return as QString to store in database.
+    /// @return QString instance. Always succeed.
+    /// Random salt should be generated only once at app first launch.
+    QString generate_random_salt() noexcept;
 
-    uint32_t get_encrypt_nonce();
 
-    void encrypt(QString& plain);
+    /// @brief Set salt which will be used to evaluate key from password.
+    /// @param salt - salt to be set.
+    /// @return void. Always succeed.
+    /// There is no corresponding getter because callee must take care.
+    void set_salt(const QString& salt) noexcept;
 
-    void decrypt(QString& cypher);
+
+    /// @brief Evaluate key which will be used to generate keystream.
+    /// @param password - password to generate keystream from.
+    /// @return void. Use error() to get status.
+    /// Key is stored as private member.
+    void evaluate_key(const QString& password) noexcept;
+
+
+    /// @brief Generate 2 keystreams: decrypt (old) and encrypt (new).
+    /// @param encrypt_blocks - number of blocks in encrypt keystream.
+    /// @param decrypt_blocks - number of blocks in decrypt keystream.
+    /// @param decrypt_nonce - unique nonce which was used to encrypt data last time.
+    /// @return void. Use error() to get status.
+    /// Keystreams are stored as private members.
+    void generate_keystreams(uint32_t encrypt_blocks, uint32_t decrypt_blocks, uint32_t decrypt_nonce) noexcept;
+
+
+    /// @brief Get nonce which is used to generate encrypt keystream
+    /// @return uint32_t value. Use error() to get status.
+    /// This method call makes sence only after the encrypt nonce is
+    /// actually generated = after successful generate_keystreams() call.
+    uint32_t get_encrypt_nonce() noexcept;
+
+
+    /// @brief Encrypt given QString instance.
+    /// @param plain - string to be encrypted.
+    /// @return void. Always succeed.
+    /// Encryption is done using encrypt keystream. Incoming strings are
+    /// encrypted with different part of the keystream. If keystream is over
+    /// it starts from the beginning. If such a behavior is not suitable,
+    /// the class user is responsible for generating long enough keystream
+    /// by passing encrypt_blocks param to generate_keystream() method.
+    void encrypt(QString& plain) noexcept;
+
+
+    /// @brief Decrypt given QString instance.
+    /// @param cypher - string to be decrypted.
+    /// @return void. Always succeed.
+    /// Decryption is done using decrypt keystream. This class user is
+    /// responsible for correct keystream is generated. So the params
+    /// decrypt_blocks and decrypt_nonce of the same values as they were
+    /// while encryption should be passed to generate_keystream() method.
+    void decrypt(QString& cypher) noexcept;
 
 private:
 
-    void generate_encrypt_nonce();
+    /// @brief Generate new nonce to be used while generating encrypt keystream.
+    /// @return void. Always succeed.
+    /// According to the crypto algoritm nonce must be unique for every keystream
+    /// generated using the same key. This function generates nonce as random
+    /// bytes array with almost no chance to generate the same nonce ever. But if
+    /// already used nonces traking is required, this class user takes responsibility.
+    void generate_encrypt_nonce() noexcept;
 };
 
 

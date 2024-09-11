@@ -7,7 +7,7 @@ namespace quest
 {
 
 
-KeyStream::KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce)
+Crypto::KeyStream::KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce)
 {
     //chacha20_keystream(nullptr, nullptr, 0, nullptr);
     printf("%s\n", chacha20_rfc_test() ? "ok" : "fail");
@@ -18,7 +18,7 @@ KeyStream::KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce)
 bool Crypto::is_inited_ = false;
 
 
-Crypto::Crypto()
+Crypto::Crypto() noexcept
 {
     // libsodium library must be inited only once and
     // does not require to be explicitely destroyed
@@ -48,19 +48,19 @@ Crypto::Crypto()
 }
 
 
-bool Crypto::ok()
+bool Crypto::ok() noexcept
 {
     return error_ == CryptoErr::Ok;
 }
 
 
-CryptoErr Crypto::error()
+CryptoErr Crypto::error() noexcept
 {
     return error_;
 }
 
 
-QString Crypto::generate_random_salt()
+QString Crypto::generate_random_salt() noexcept
 {
     randombytes_buf(salt_, sizeof(salt_));    // always succeed
 
@@ -70,14 +70,15 @@ QString Crypto::generate_random_salt()
 }
 
 
-void Crypto::set_salt(const QString& salt)
+void Crypto::set_salt(const QString& salt) noexcept
 {
-    // TODO: [impl] https://forum.qt.io/topic/92621/convert-qstring-to-wchar_t/4
-    // salt is given from database
+    salt.toWCharArray(reinterpret_cast<wchar_t*>(salt_));
+
+    error_ = CryptoErr::Ok;
 }
 
 
-void Crypto::evaluate_key(const QString& password)
+void Crypto::evaluate_key(const QString& password) noexcept
 {
     error_ = CryptoErr::Key;
 
@@ -109,14 +110,14 @@ void Crypto::evaluate_key(const QString& password)
 }
 
 
-void Crypto::generate_keystreams(uint32_t blocks, uint32_t decrypt_nonce)
+void Crypto::generate_keystreams(uint32_t encrypt_blocks, uint32_t decrypt_blocks, uint32_t decrypt_nonce) noexcept
 {
     generate_encrypt_nonce();
 
     // try
     // {
-    //     ks_decrypt = std::make_unique<KeyStream>(key_, blocks, decrypt_nonce);
-         ks_encrypt = std::make_unique<KeyStream>(key_, blocks, encrypt_nonce_);
+    //     ks_decrypt = std::make_unique<KeyStream>(key_, decrypt_blocks, decrypt_nonce);
+         ks_encrypt = std::make_unique<KeyStream>(key_, encrypt_blocks, encrypt_nonce_);
     // }
     // catch (...)
     // {
@@ -129,7 +130,7 @@ void Crypto::generate_keystreams(uint32_t blocks, uint32_t decrypt_nonce)
 }
 
 
-uint32_t Crypto::get_encrypt_nonce()
+uint32_t Crypto::get_encrypt_nonce() noexcept
 {
     if (encrypt_nonce_ == 0)
     {
@@ -144,19 +145,23 @@ uint32_t Crypto::get_encrypt_nonce()
 }
 
 
-void Crypto::encrypt(QString& plain)
+void Crypto::encrypt(QString& plain) noexcept
 {
+    error_ = CryptoErr::Ok;
+
     return;
 }
 
 
-void Crypto::decrypt(QString& cypher)
+void Crypto::decrypt(QString& cypher) noexcept
 {
+    error_ = CryptoErr::Ok;
+
     return;
 }
 
 
-void Crypto::generate_encrypt_nonce()
+void Crypto::generate_encrypt_nonce() noexcept
 {
     uint8_t buf[sizeof(encrypt_nonce_)] = { 0 };
 

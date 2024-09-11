@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
     window.setToolTip(tip);
     window.show();
 
-    database_test(out);
+    crypto_test(out);
+    // database_test(out);
 
     return a.exec();
 }
@@ -57,9 +58,11 @@ void crypto_test(QTextStream& out)
     QString salt = crypto.generate_random_salt();
     out << "Salt. size=" << salt.size() << ", val=" << salt << Qt::endl;
 
-    QString passwd("password");
-    crypto.evaluate_key(passwd);
-    crypto.generate_keystreams(1, 1);
+    crypto.set_salt(salt);
+
+    // QString passwd("password");
+    // crypto.evaluate_key(passwd);
+    // crypto.generate_keystreams(1, 1);
 
     /*
         password                // from UI
@@ -88,13 +91,11 @@ void crypto_test(QTextStream& out)
             encrypt salt with new keystream
             encrypt clients' data with new keystream
             set new nonce
-            copy :memory: db to the disk
-            remove previous db from disk
 
         crypto interface:
         +   init -> every time [made in constructor, so crypto is always inited]
         +   generate salt -> only first run, oneshot
-            set_salt -> every run, oneshot
+        +   set_salt -> every run, oneshot
             decrypt -> every run, repeatable
             encrypt -> every run, repeatable
         +   generate_keystreams(password, salt, decrypt_nonce) -> every run, oneshot (return encrypt_nonce)

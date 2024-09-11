@@ -218,9 +218,6 @@ bool Database::init_database()
 
             QSqlQuery query(db);
 
-            // TODO: [debug] remove
-            print_pragma("user_version", db);
-
             rc = query.exec(QString("VACUUM INTO '%1'").arg(db_name_in_memory_));
             if (!rc)
             {
