@@ -3,7 +3,9 @@
 
 
 #include <QString>
-#include <mutex>
+#include <iterator>     // std::default_sentinel
+#include <mutex>        // std::call_once
+#include <vector>
 
 
 #include "chacha20.h"
@@ -40,6 +42,8 @@ enum class CryptoErr
     Key,
     Keystream,
     Nonce,
+    Encrypt,
+    Decrypt,
     Uncknown
 };
 
@@ -54,11 +58,78 @@ private:
 
         QString ks_;
 
+        bool is_chacha20_inited_ = false;
+
+    public:
+
+        class iterator
+        {
+        private:
+
+            static iterator* iter_;
+
+            QChar* begin_ = nullptr;
+
+            QChar* curr_ = nullptr;
+
+        public:
+
+            /// @brief KeyStream iterator instance getter.
+            /// @param begin - first QChar* of keystream QString
+            /// The class is implemented as Singleton to guarantee
+            /// the same keystream is never used for different data.
+            static iterator* instance(QChar* begin) noexcept;
+
+
+            /// @brief Forbid copy and move constructors and assign operators
+            iterator(iterator& other) = delete;
+            iterator(iterator&& other) = delete;
+            void operator=(iterator& other) = delete;
+            void operator=(iterator&& other) = delete;
+
+
+            /// @brief Detect if iteration is finished.
+            /// @param ... - no actual comparison of two iterators is done.
+            /// @return always return 'false'
+            /// Current implementation allows the keystream 'overflow':
+            /// if the keystream is over it starts from the beginnig.
+            /// See operator++ overloads implementation for details.
+            bool operator!= (std::default_sentinel_t);
+
+
+            /// @brief Iterate to the next element.
+            /// Both operator++ overloads actualy do nothing.
+            /// See operator* overload implementation.
+            void operator++();
+            void operator++(int);
+
+
+            /// @brief Return underlying value.
+            /// Real iteration is sone here.
+            const QChar* operator*();
+
+        private:
+
+            /// @brief Constructor.
+            /// Always succeeded.
+            iterator(QChar* begin) noexcept;
+
+
+            /// @brief Destructor.
+            /// As class is implemented as Singleton, no destruction is allowed
+            /// until the program itself is over. Such an approach is suitable
+            /// because this class doesn't actually own any resources which should
+            /// be explicitely freed or any business logic to be necessarily done.
+            ~iterator() = default;
+        };
+
     public:
 
         KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce);
 
-        // TODO: [impl] iterator
+        iterator* begin();
+
+        std::default_sentinel_t end();
     };
 
 
@@ -82,9 +153,9 @@ private:
 public:
 
     /// @brief Crypto class instance getter.
-    /// The class is implemented as Singletone to guarantee
+    /// The class is implemented as Singleton to guarantee
     /// only one cryptography initialization per app run.
-    static Crypto* instance();
+    static Crypto* instance() noexcept;
 
 
     /// @brief Forbid copy and move constructors and assign operators
@@ -184,6 +255,13 @@ private:
     /// bytes array with almost no chance to generate the same nonce ever. But if
     /// already used nonces traking is required, this class user takes responsibility.
     void generate_encrypt_nonce() noexcept;
+
+
+    /// @brief Apply keystream to the given string.
+    /// @param str - the given string.
+    /// @param ks_iter - itertor of keystream to be applied.
+    /// Always succeed.
+    void apply_ks(QString& str, KeyStream::iterator* ks_iter);
 };
 
 

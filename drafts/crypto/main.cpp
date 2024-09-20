@@ -62,9 +62,9 @@ void crypto_test(QTextStream& out)
     quest::Crypto* crypto2 = quest::Crypto::instance();
     crypto2->set_salt(salt);
 
-    // QString passwd("password");
-    // crypto.evaluate_key(passwd);
-    // crypto.generate_keystreams(1, 1);
+    QString passwd("password");
+    crypto->evaluate_key(passwd);
+    crypto->generate_keystreams(1, 1, 42);
 
     /*
         password                // from UI

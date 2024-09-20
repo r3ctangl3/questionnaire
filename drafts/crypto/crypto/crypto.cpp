@@ -1,24 +1,15 @@
+#include "utils.h"       // TODO: [debug] remove
 #include "crypto.h"
-#include "utils.h"
-#include "chacha20_tests/tests.h"
 
 
 namespace quest
 {
 
 
-Crypto::KeyStream::KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce)
-{
-    //chacha20_keystream(nullptr, nullptr, 0, nullptr);
-    printf("%s\n", chacha20_rfc_test() ? "ok" : "fail");
-    return;
-}
-
-
 Crypto* Crypto::instance_ = nullptr;
 
 
-Crypto* Crypto::instance()
+Crypto* Crypto::instance() noexcept
 {
     static std::once_flag flag;
 
@@ -27,8 +18,19 @@ Crypto* Crypto::instance()
         try
         {
             instance_ = new Crypto();
+
+            if (!instance_->ok())
+            {
+                delete instance_;
+                instance_ = nullptr;
+                throw std::runtime_error("Crypto constructor");
+            }
         }
         catch (const std::bad_alloc&)
+        {
+            // do nothing for now
+        }
+        catch (const std::runtime_error&)
         {
             // do nothing for now
         }
@@ -84,11 +86,11 @@ void Crypto::evaluate_key(const QString& password) noexcept
             break;
         }
 
-        int rc = crypto_pwhash_scryptsalsa208sha256( key_, sizeof(key_),
-                                                     passwd_bytes, strlen(passwd_bytes),
-                                                     salt_,
-                                                     OPS_LIMIT,
-                                                     MEM_LIMIT );
+        int rc = crypto_pwhash_scryptsalsa208sha256(key_, sizeof(key_),
+                                                    passwd_bytes, strlen(passwd_bytes),
+                                                    salt_,
+                                                    OPS_LIMIT,
+                                                    MEM_LIMIT );
         if (rc != 0)
         {
             break;
@@ -139,6 +141,10 @@ uint32_t Crypto::get_encrypt_nonce() noexcept
 
 void Crypto::encrypt(QString& plain) noexcept
 {
+    static auto iter = ks_encrypt->begin();
+
+    apply_ks(plain, iter);
+
     error_ = CryptoErr::Ok;
 
     return;
@@ -147,6 +153,10 @@ void Crypto::encrypt(QString& plain) noexcept
 
 void Crypto::decrypt(QString& cypher) noexcept
 {
+    static auto iter = ks_decrypt->begin();
+
+    apply_ks(cypher, iter);
+
     error_ = CryptoErr::Ok;
 
     return;
@@ -178,6 +188,14 @@ void Crypto::generate_encrypt_nonce() noexcept
     encrypt_nonce_ = *reinterpret_cast<uint32_t*>(buf);
 
     error_ = CryptoErr::Ok;
+
+    return;
+}
+
+
+void Crypto::apply_ks(QString& str, KeyStream::iterator* ks_iter)
+{
+    // TODO: [impl] implement
 
     return;
 }
