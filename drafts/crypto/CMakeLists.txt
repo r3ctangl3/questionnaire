@@ -16,6 +16,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Sql)
 set(DIR_MAIN ${CMAKE_CURRENT_SOURCE_DIR})
 set(DIR_CHACHA20 chacha20)
 set(DIR_CRYPTO crypto)
+set(DIR_DATABASE database)
 
 add_subdirectory(${DIR_CHACHA20})
 
@@ -25,12 +26,16 @@ set(SOURCES_CRYPTO
     ${DIR_CRYPTO}/keystream.cpp
 )
 
+set(SOURCES_DATABASE
+    ${DIR_DATABASE}/database.h
+    ${DIR_DATABASE}/database.cpp
+    ${DIR_DATABASE}/database_structure.cpp
+)
+
 set(SOURCES_PROJECT
     main.cpp
     ${SOURCES_CRYPTO}
-    database.cpp
-    database.h
-    database_structure.cpp
+    ${SOURCES_DATABASE}
     utils.h
     widget.cpp
     widget.h
@@ -40,6 +45,7 @@ qt_add_executable(GuiApp MANUAL_FINALIZATION ${SOURCES_PROJECT})
 
 target_include_directories(GuiApp PRIVATE ${DIR_MAIN})
 target_include_directories(GuiApp PRIVATE ${DIR_CRYPTO})
+target_include_directories(GuiApp PRIVATE ${DIR_DATABASE})
 
 target_link_libraries(GuiApp PRIVATE chacha20)
 target_link_libraries(GuiApp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)

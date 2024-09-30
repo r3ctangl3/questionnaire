@@ -49,22 +49,35 @@ void database_test(QTextStream& out)
 void crypto_test(QTextStream& out)
 {
     quest::Crypto* crypto = quest::Crypto::instance();
-    if (!crypto->ok())
-    {
-        ERROR("Filed to create crypto instance");
+    if (!crypto->ok()) {
+        ERROR("Failed to create crypto instance");
         return;
     }
 
-    QString salt = crypto->generate_random_salt();
-    out << "Salt. size=" << salt.size() << ", val=" << salt << Qt::endl;
-
-    // test Singleton
-    quest::Crypto* crypto2 = quest::Crypto::instance();
-    crypto2->set_salt(salt);
-
     QString passwd("password");
+
+    crypto->generate_random_salt();
     crypto->evaluate_key(passwd);
     crypto->generate_keystreams(1, 1, 42);
+
+    uint32_t nonce = crypto->get_encrypt_nonce();
+    INFO(nonce);
+
+    QString text("абрвыомищгцамидуламиышамгиузцмшагижядмтфжамигдфушгмаидуыамтлоамифшдиамгфушгамидыамиыламляорсиядчлоимдыапмфшгамшуагмифдамигыапмниывланмфмавыдрмвынмпывдшанмпвыдлаиывдапвышнмпвыдаиловыидр");
+    INFO(text.size());
+    crypto->encrypt(text);
+
+    // out << text << Qt::endl;
+    // std::string s = text.toStdString();
+    // QString q = QString::fromStdString(s);
+    // INFO(q.size());
+
+
+
+    // crypto->decrypt(plain);
+
+
+
 
     /*
         password                // from UI

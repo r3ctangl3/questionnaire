@@ -57,6 +57,8 @@ private:
 
     bool set_database_structure(const QSqlDatabase& db);
 
+    bool decrypt_database();
+
     bool encrypt_database();
 };
 

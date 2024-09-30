@@ -227,6 +227,13 @@ bool Database::init_database()
 
             INFO(db_.tables().size());
 
+            rc = decrypt_database();
+            if (!rc)
+            {
+                ERROR("decrypt_database()");
+                break;
+            };
+
             INFO("Database inited and loaded to memory");
 
             rc = true;
@@ -333,6 +340,14 @@ bool Database::set_database_structure(const QSqlDatabase& db)
     query.exec("INSERT INTO Tests VALUES (0, '0', '00'), (1, '1', '11')");      // TODO: [debug] remove
 
     return rc;
+}
+
+
+bool Database::decrypt_database()
+{
+    // TODO: [impl] implement decryption
+
+    return true;
 }
 
 

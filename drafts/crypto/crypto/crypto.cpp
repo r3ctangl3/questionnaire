@@ -195,7 +195,15 @@ void Crypto::generate_encrypt_nonce() noexcept
 
 void Crypto::apply_ks(QString& str, KeyStream::iterator* ks_iter)
 {
-    // TODO: [impl] implement
+    const QChar *ks;
+    QChar *data = str.data();
+
+    while (!data->isNull())
+    {
+        ks = **ks_iter;
+        data->unicode() = data->unicode() ^ ks->unicode();
+        ++data;
+    }
 
     return;
 }
