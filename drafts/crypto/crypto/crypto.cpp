@@ -141,24 +141,67 @@ uint32_t Crypto::get_encrypt_nonce() noexcept
 
 void Crypto::encrypt(QString& plain) noexcept
 {
-    static auto iter = ks_encrypt->begin();
+    static auto encrypt_iter = ks_encrypt->begin();
 
-    apply_ks(plain, iter);
+    qDebug() << encrypt_iter;
+
+    // Real encryption is done here. After the call
+    // plain string is no longer plain but contains
+    // encrypted string of the same size.
+    apply_ks(plain, encrypt_iter);
+
+    QString result(plain.size() * 4, QChar(0));
+    QChar* c = plain.data();
+    qsizetype pos = 0;
+
+    // To avoid unexpected problems with coding/deconding while
+    // writing/reading encrypted data, it will be serialized into
+    // string of string representations of wchar_t integer values.
+    while (!c->isNull()) {
+        result.replace(pos, 4, QString::asprintf("%04x", c->unicode()));
+        c += 1;
+        pos += 4;
+    }
+
+    // Reduce encryption cost
+    plain = std::move(result);
 
     error_ = CryptoErr::Ok;
-
     return;
 }
 
 
 void Crypto::decrypt(QString& cypher) noexcept
 {
-    static auto iter = ks_decrypt->begin();
+    static auto decrypt_iter = ks_decrypt->begin();
+    // static auto iter = ks_encrypt->begin();    // TODO: [debug] in case if test during one session is required (remove after)
+    static wchar_t arr[512] = { 0 };
 
-    apply_ks(cypher, iter);
+    qDebug() << decrypt_iter;
+
+    QString result;
+    QChar* c = cypher.data();
+    qsizetype pos = 0;
+
+    // Encrypted data are passed into the function serialized into
+    // string of string representations of wchar_t integer values
+    // Before data is actually decrypted deserialization is required.
+    while(!c->isNull()) {
+        arr[pos] = static_cast<wchar_t>(QStringView(c, c + 4).toInt(nullptr, 16));
+        c += 4;
+        pos += 1;
+    }
+    result = QString::fromWCharArray(arr, pos);
+
+    // Real decryption is done here. After the call
+    // result string is no longer deserialized cypher
+    // but contains decrypted string of the same size.
+    apply_ks(result, decrypt_iter);
+
+    // Reduce decryption cost
+    cypher = std::move(result);
 
     error_ = CryptoErr::Ok;
-
     return;
 }
 

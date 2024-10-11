@@ -21,9 +21,9 @@ QList<QString> db_create_structure_queries =
 
     "CREATE TABLE Clients (                                 "
     "   id              int primary key,                    "
-    "   name_given      varchar(32),                        "
-    "   name_middle     varchar(32),                        "
-    "   name_last       varchar(32),                        "
+    "   name_given      varchar(128),                       "
+    "   name_middle     varchar(128),                       "
+    "   name_last       varchar(128),                       "
     "   birth_date      TEXT,                               "       // TODO: [?] how is date stored
     "   comment         TEXT                                "
     ")                                                      ",

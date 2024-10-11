@@ -6,8 +6,10 @@
 
 #include <QApplication>
 #include <QByteArray>
+#include <QFile>
 #include <QIcon>
 #include <QList>
+#include <QRegularExpression>
 #include <QSize>
 #include <QString>
 #include <QTextStream>
@@ -48,6 +50,9 @@ void database_test(QTextStream& out)
 
 void crypto_test(QTextStream& out)
 {
+    QString filePath = "output.txt";
+    QFile file(filePath);
+
     quest::Crypto* crypto = quest::Crypto::instance();
     if (!crypto->ok()) {
         ERROR("Failed to create crypto instance");
@@ -61,23 +66,40 @@ void crypto_test(QTextStream& out)
     crypto->generate_keystreams(1, 1, 42);
 
     uint32_t nonce = crypto->get_encrypt_nonce();
-    INFO(nonce);
+    qDebug() << "Nonce: decrypt = 42, encrypt =" << nonce;
 
-    QString text("абрвыомищгцамидуламиышамгиузцмшагижядмтфжамигдфушгмаидуыамтлоамифшдиамгфушгамидыамиыламляорсиядчлоимдыапмфшгамшуагмифдамигыапмниывланмфмавыдрмвынмпывдшанмпвыдлаиывдапвышнмпвыдаиловыидр");
-    INFO(text.size());
-    crypto->encrypt(text);
+    QString data("Иванов Иван Иванович проходил тест и показал следующий результат");
 
-    // out << text << Qt::endl;
-    // std::string s = text.toStdString();
-    // QString q = QString::fromStdString(s);
-    // INFO(q.size());
+    QString plain = data;
 
+    crypto->encrypt(plain);
+    qDebug() << plain;
 
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream fout(&file);
+        fout << plain;
+        file.close();
+    }
 
-    // crypto->decrypt(plain);
+    QString cypher;
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream fin(&file);
+        cypher = fin.readAll();
+        file.close();
+    }
 
+    crypto->decrypt(cypher);
 
+    if (file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+    {
+        QTextStream fout(&file);
+        fout << Qt::endl << cypher;
+        file.close();
+    }
 
+    qDebug() << ((data == cypher) ? "OK" : "Error");
 
     /*
         password                // from UI
