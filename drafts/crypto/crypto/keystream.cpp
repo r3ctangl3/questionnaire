@@ -6,10 +6,13 @@ namespace quest
 {
 
 
-Crypto::KeyStream::iterator* Crypto::KeyStream::iterator::iter_ = nullptr;
+template <KeyStreamType T>
+Crypto::KeyStream::iterator<T>* Crypto::KeyStream::iterator<T>::iter_ = nullptr;
 
 
-Crypto::KeyStream::iterator* Crypto::KeyStream::iterator::instance(QChar* begin) noexcept
+
+template <KeyStreamType T>
+Crypto::KeyStream::iterator<T>* Crypto::KeyStream::iterator<T>::instance(QChar* begin) noexcept
 {
     static std::once_flag flag;
 
@@ -31,23 +34,27 @@ Crypto::KeyStream::iterator* Crypto::KeyStream::iterator::instance(QChar* begin)
 }
 
 
-bool Crypto::KeyStream::iterator::operator!= (std::default_sentinel_t)
+template <typename T>
+bool Crypto::KeyStream::iterator<T>::operator!= (std::default_sentinel_t)
 {
     return false;
 }
 
 
-void Crypto::KeyStream::iterator::operator++()
+template <typename T>
+void Crypto::KeyStream::iterator<T>::operator++()
 {
 }
 
 
-void Crypto::KeyStream::iterator::operator++(int)
+template <typename T>
+void Crypto::KeyStream::iterator<T>::operator++(int)
 {
 }
 
 
-const QChar* Crypto::KeyStream::iterator::operator*()
+template <typename T>
+const QChar* Crypto::KeyStream::iterator<T>::operator*()
 {
     QChar* ptr = curr_;
 
@@ -60,7 +67,8 @@ const QChar* Crypto::KeyStream::iterator::operator*()
 }
 
 
-Crypto::KeyStream::iterator::iterator(QChar* begin) noexcept :
+template <typename T>
+Crypto::KeyStream::iterator<T>::iterator(QChar* begin) noexcept :
     begin_(begin), curr_(begin)
 {
 }
@@ -87,9 +95,10 @@ Crypto::KeyStream::KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce
 }
 
 
-Crypto::KeyStream::iterator* Crypto::KeyStream::begin()
+template <typename T>
+Crypto::KeyStream::iterator<T>* Crypto::KeyStream::begin()
 {
-    return iterator::instance(ks_.data());
+    return iterator<T>::instance(ks_.data());
 }
 
 
@@ -97,6 +106,14 @@ std::default_sentinel_t Crypto::KeyStream::end()
 {
     return std::default_sentinel;
 }
+
+
+// Explicitely instantiate Crypto::KeyStream::iterator<T> related entities:
+// keep it aligned with 'concept KeyStreamType' or will cause compile error.
+template class Crypto::KeyStream::iterator<KeyStreamDecrypt>;
+template class Crypto::KeyStream::iterator<KeyStreamEncrypt>;
+template Crypto::KeyStream::iterator<KeyStreamDecrypt>* Crypto::KeyStream::begin();
+template Crypto::KeyStream::iterator<KeyStreamEncrypt>* Crypto::KeyStream::begin();
 
 
 } // namespace quest

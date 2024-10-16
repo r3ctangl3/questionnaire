@@ -5,6 +5,7 @@
 #include <QString>
 #include <iterator>     // std::default_sentinel
 #include <mutex>        // std::call_once
+#include <type_traits>  // std::is_same
 #include <vector>
 
 
@@ -48,6 +49,16 @@ enum class CryptoErr
 };
 
 
+// All the work is done using two KeyStreams:
+// one for decryption and one for encryption.
+// To make possible having one Singltone iterator for
+// each KeyStream these helper types are defined.
+class KeyStreamDecrypt;
+class KeyStreamEncrypt;
+template <typename T>
+concept KeyStreamType = std::is_same<T, KeyStreamDecrypt>::value || std::is_same<T, KeyStreamEncrypt>::value;
+
+
 class Crypto
 {
 private:
@@ -62,6 +73,7 @@ private:
 
     public:
 
+        template <KeyStreamType T>
         class iterator
         {
         private:
@@ -127,7 +139,8 @@ private:
 
         KeyStream(const uint8_t* key, uint32_t blocks, uint32_t nonce);
 
-        iterator* begin();
+        template <typename T>
+        iterator<T>* begin();
 
         std::default_sentinel_t end();
     };
@@ -261,7 +274,8 @@ private:
     /// @param str - the given string.
     /// @param ks_iter - itertor of keystream to be applied.
     /// Always succeed.
-    void apply_ks(QString& str, KeyStream::iterator* ks_iter);
+    template <typename T>
+    void apply_ks(QString& str, KeyStream::iterator<T>* ks_iter);
 };
 
 

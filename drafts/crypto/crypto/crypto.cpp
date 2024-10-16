@@ -141,7 +141,7 @@ uint32_t Crypto::get_encrypt_nonce() noexcept
 
 void Crypto::encrypt(QString& plain) noexcept
 {
-    static auto encrypt_iter = ks_encrypt->begin();
+    static auto encrypt_iter = ks_encrypt->begin<KeyStreamEncrypt>();
 
     qDebug() << encrypt_iter;
 
@@ -173,11 +173,9 @@ void Crypto::encrypt(QString& plain) noexcept
 
 void Crypto::decrypt(QString& cypher) noexcept
 {
-    static auto decrypt_iter = ks_decrypt->begin();
-    // static auto iter = ks_encrypt->begin();    // TODO: [debug] in case if test during one session is required (remove after)
+    static auto decrypt_iter = ks_decrypt->begin<KeyStreamDecrypt>();
+    // static auto decrypt_iter = ks_encrypt->begin<KeyStreamEncrypt>();    // TODO: [debug] in case if test during one session is required (remove after)
     static wchar_t arr[512] = { 0 };
-
-    qDebug() << decrypt_iter;
 
     QString result;
     QChar* c = cypher.data();
@@ -236,7 +234,8 @@ void Crypto::generate_encrypt_nonce() noexcept
 }
 
 
-void Crypto::apply_ks(QString& str, KeyStream::iterator* ks_iter)
+template <typename T>
+void Crypto::apply_ks(QString& str, KeyStream::iterator<T>* ks_iter)
 {
     const QChar *ks;
     QChar *data = str.data();
