@@ -14,7 +14,7 @@ Authorization::Authorization( QObject* parent )
 {
 }
 
-void Authorization::setup()
+void Authorization::initialize()
 {
     //todo some crypto work
     //todo if( crypto.is_signed_up  )

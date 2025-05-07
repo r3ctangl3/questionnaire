@@ -39,12 +39,16 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated_sources)
 #declare qrc file path
 set(QRC_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/generated_sources/generated_qml.qrc")
 
+#generate qml sources
 generate_qml_qrc(
         TARGET_NAME ${TARGET_NAME}
         QML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/qml"
+        RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources"
         OUTPUT_QRC "${QRC_FILE_PATH}"
-        PREFIX "/"
+        QML_PREFIX "/ui"
+        RESOURCES_PREFIX "/style"
 )
+
 
 target_link_libraries(${TARGET_NAME}
         PRIVATE Qt6::Quick Qt6::Widgets

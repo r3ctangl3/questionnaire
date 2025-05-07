@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file alias="Custom.qml">/home/elizaveta/projects/try2build_qrc/qml/Custom.qml</file>
-    <file alias="main.qml">/home/elizaveta/projects/try2build_qrc/qml/main.qml</file>
-  </qresource>
-</RCC>

@@ -22,7 +22,7 @@ class Authorization : public QObject //add signal-slot system. QML required
 public:
     explicit Authorization( QObject* parent );
 
-    void setup();
+    void initialize();
 
 private:
     bool getAccountExists() const noexcept; //READ required. Makes visible 'accountExists' in QML

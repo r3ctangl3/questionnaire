@@ -7,11 +7,11 @@
 
 #include <QObject>
 #include <QApplication>
-#include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlApplicationEngine>
 
 #include "Authorization.h"
-#include "WindowsManager.h"
+#include "windows/WindowsManager.h"
 
 namespace application
 {
@@ -22,9 +22,10 @@ class Application final : public QApplication
     Q_PROPERTY( application::authorization::Authorization* authorization READ getAuthorization CONSTANT )
 
 public:
-    explicit Application( int argc, char* argv[ ] );
+    explicit Application( int& argc, char** argv );
 
-    void authorize() const noexcept; //todo naming (help)
+private slots:
+    void onAboutToQuit();
 
 private:
     application::authorization::Authorization* getAuthorization() const noexcept;

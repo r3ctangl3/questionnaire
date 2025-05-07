@@ -2,9 +2,11 @@
 
 int main(int argc, char *argv[])
 {
+    application::Application::setAttribute( Qt::AA_UseSoftwareOpenGL, true );
+    QQuickWindow::setDefaultAlphaBuffer( true );
 
-    application::Application app( argc, argv ); //todo static or singletone?
-    app.authorize();
-    return app.exec();
+    application::Application testLab( argc, argv );
 
+    const auto result = testLab.exec();
+    return result;
 }
