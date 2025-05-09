@@ -30,8 +30,8 @@ void Splash::initialize( const QPointer<QQmlApplicationEngine>& engine )
         return;
     }
     setFlags( Qt::SplashScreen | Qt::FramelessWindowHint ); //splash screen configurations
-    setHeight( 600 );
-    setWidth( 500 );
+    setHeight( 592 );
+    setWidth( 546 );
     setColor( "transparent" );
 
     QQmlComponent component( engine, QUrl( PATH ) );

@@ -8,6 +8,7 @@
 #include <QObject>
 #include <QApplication>
 #include <QQmlContext>
+#include <QFontDatabase>
 #include <QQmlApplicationEngine>
 
 #include "Authorization.h"

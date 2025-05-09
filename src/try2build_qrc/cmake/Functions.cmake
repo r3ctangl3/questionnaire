@@ -16,7 +16,7 @@ function(generate_qml_qrc)
     file(GLOB_RECURSE QML_FILES "${ARG_QML_DIR}/*.qml" "${ARG_QML_DIR}/qmldir")
 
     file(GLOB_RECURSE ICONS "${ARG_RESOURCES_DIR}/*.svg" "${ARG_QML_DIR}/*.png")
-    file(GLOB_RECURSE FONTS "${ARG_RESOURCES_DIR}/*.ttf")
+    file(GLOB_RECURSE FONTS "${ARG_RESOURCES_DIR}/*.ttf" "${ARG_RESOURCES_DIR}/*.otf")
 
     set(RESOURCES_LIST)
     list(APPEND RESOURCES_LIST ${ICONS})
@@ -34,6 +34,7 @@ function(generate_qml_qrc)
         endif ()
 
         set(QRC_CONTENT "${QRC_CONTENT}    <file alias=\"${REL_PATH}\">${QML_FILE}</file>\n")
+
     endforeach()
     set(QRC_CONTENT "${QRC_CONTENT}  </qresource>\n\n")
 

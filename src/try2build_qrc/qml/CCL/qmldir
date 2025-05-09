@@ -1,0 +1,6 @@
+module CCL
+
+CCLIcon 1.0 CCLIcon.qml
+CCLLabel 1.0  CCLLabel.qml
+CCLPasswordField 1.0 CCLPasswordField.qml
+EnumUtils 1.0 EnumUtils.qml
