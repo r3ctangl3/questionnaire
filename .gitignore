@@ -32,6 +32,9 @@ Makefile*
 *.qm
 *.prl
 
+# Folder
+/src/debug
+
 # Qt unit tests
 target_wrapper.*
 
